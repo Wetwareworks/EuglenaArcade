@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" />
 </head>
 <body>
-<span style="font-family: 'Lobster', cursive;">&nbsp;</span>
+<span style="font-family: 'Permanent Marker';">&nbsp;</span><span style="font-family: 'Work Sans';">&nbsp;</span>
 <video id="video" style="display:none" autoplay></video>
 <script>
 
@@ -17,8 +17,8 @@ var w = width = 640;
 var h = height = 480;
 var centerX = w/2;
 var centerY = h/2;
-var h1size = w/10;
-var h2size = w/20;
+var h1size = w/25;
+var h2size = w/50;
 var canvas;
 var video = document.getElementById('video');
 
@@ -35,7 +35,7 @@ var menuID;
 var clickRecs;
 
 // Game
-var radius = 20; // Player radius
+var radius = h1size/4; // Player radius
 var start_time = performance.now();
 var time = 0;
 var hit = 0;
@@ -66,6 +66,9 @@ function resize(){
 	var c = document.getElementsByTagName('canvas');
 	width = w = window.innerWidth;
 	height = h = window.innerHeight;
+	h1size = w/25;
+	h2size = w/50;
+	radius = h1size/4;
 	for(var i = 0; i < c.length; i++) {
 		c[i].width = width;
 		c[i].height = height;
@@ -207,6 +210,7 @@ canvas.addEventListener('click', (e) => {
 			if(rect.id == 1) {
 				gameState = 1;
 				clearInterval(menuID);
+				start_time = performance.now();
 				gameID = setInterval(gameLoop, 100);
 			}	
 		}
@@ -222,17 +226,21 @@ function gameMenu() {
 	
 	// Menu items
 	ctx.textAlign="center"; 
-	ctx.font = h1size+'px Lobster';
+	ctx.font = h2size+"px 'Permanent Marker'";
+	ctx.fillStyle = "rgba(0, 234, 211, 1)";
+	ctx.fillText('WetWareWorks', (w/2), ((h/2)-h1size));
+	
+	ctx.font = h1size+"px 'Permanent Marker'";
 	ctx.fillStyle = "rgba(0, 128, 93, 1)";
 	ctx.fillText('Euglena Biotic Arcade', (w/2), (h/2));
 	
 	if(videoReady == false) {
-		ctx.font = h2size+'px Arial';
+		ctx.font = h2size+"px 'Work Sans'";
 		ctx.fillStyle = "rgba(100,100,100,1)";
 		ctx.fillText('Start by granting your browser access to webcam', (w/2),(h/2 + h1size));
 	}
 	else {
-		ctx.font = h2size+'px Arial';
+		ctx.font = h2size+"px 'Work Sans'";
 		var txt1 = 'Start New Game';
 		var txt2 = 'Calibrate Arcade Scope';
 		var txt3 = 'Game Info';
@@ -336,11 +344,13 @@ function gameLoop() {
 		}
 	}
 	
-	// If Hit reduce life by 1
-	if(hitindex > 0) {
-		life--; // Reduce players life by one
-		hit++; 
-		console.log("hit:"+hit);
+	// If after Spawn imunity and if Hit reduce life by 1
+	if((performance.now() - start_time) > 4000) {
+		if(hitindex > 0) {
+			life--; // Reduce players life by one
+			hit++; 
+			console.log("hit:"+hit);
+		}
 	}
 
 	// Reset game
@@ -353,7 +363,7 @@ function gameLoop() {
 		
 		// Reset player on random location
 		centerX = Math.floor((Math.random() * w) + 1);
-		centerY = Math.floor((Math.random() * h) + 1);
+		centerY = Math.floor(Math.random() * (h-(h2size*2)) + (h2size*2));
 
 		// Reset 
 		enter = false;
@@ -369,7 +379,7 @@ function gameLoop() {
 
 		var txt9 = 'Score: '+ final_score+' Press ENTER to restart';
 		ctx.textAlign="center"; 
-		ctx.font = h1size + ' Lobster';
+		ctx.font = h1size + "px 'Permanent Marker'";
 		ctx.fillStyle = "rgba(0, 0, 0, 1)";
 		ctx.rect((w/2-ctx.measureText(txt9).width/2-10),(h/2-h1size/2+5),(ctx.measureText(txt9).width+20),(h1size+10));
 		ctx.stroke(); 
@@ -380,32 +390,46 @@ function gameLoop() {
 	}
 	else {
 		// Player is alive so draw the game 
+		// Draw top bar
+		ctx.rect(0, 0, w, (h2size*2));
+		ctx.fillStyle = "rgba(0,0,0,1)";
+		ctx.fill();
 	
-		// Draw player
-		ctx.lineWidth = 10;
-		ctx.strokeStyle = "rgba(120, 234, 211, 1)";
-		ctx.fillStyle = "rgba(54, 202, 232, 1)";
-		
+		// Draw player	
 		ctx.beginPath();
 		ctx.arc((centerX + deltaX), (centerY + deltaY), radius, 0, Math.PI*2, true); 
-		ctx.closePath();
-
-		ctx.stroke();
+		
+		// Spawn with immunity indicator
+		if((performance.now() - start_time) < 4000) {
+			ctx.lineWidth = ((h2size/4) / ((performance.now() - start_time)/1000));
+			ctx.strokeStyle = "rgba(120, 234, 211, 1)";
+			ctx.stroke();
+		}
+		
+		ctx.fillStyle = "rgba(54, 202, 232, 1)";
 		ctx.fill();
+		ctx.closePath();		
 
-		// Display score
-		score = Math.round((performance.now() - start_time)/1000);
-		ctx.font = h2size + 'px Lobster';
+		// Wetwareworks		
+		ctx.textAlign="center"; 
+		ctx.font = (h2size/2) + "px 'Permanent Marker'";
+		ctx.fillStyle = "rgba(0, 234, 211, 1)";
+		ctx.fillText('WetWareWorks', w/2, (h2size/2));
+		ctx.font = h2size + "px 'Permanent Marker'";
 		ctx.fillStyle = "rgba(0, 128, 93, 1)";
+		ctx.fillText('Euglena Biotic Arcade', w/2, (h2size+(h2size / 2)));
+		
+		// Display score
 		ctx.textAlign="start"; 
-		ctx.fillText('Score: '+ score, w - h1size*3, h1size*2);
+		score = Math.round((performance.now() - start_time)/1000);
+		ctx.font = h2size + "px 'Work Sans'";
+		ctx.fillStyle = "rgba(248, 132, 81, 1)";
+		ctx.fillText('Score: '+ score, h1size, (h2size+(h2size / 3)));
 		
 		// Display lives
-		score = Math.round((performance.now() - start_time)/1000);
-		ctx.font = h2size + 'px Lobster';
-		ctx.fillStyle = "rgba(0, 128, 93, 1)";
-		ctx.textAlign="start"; 
-		ctx.fillText('Lives: '+ life, w - h1size*3, h1size*1);
+		ctx.textAlign="end"; 
+		ctx.fillStyle = "rgba(248, 132, 81, 1)";
+		ctx.fillText('Lives: '+ life, w - h1size, (h2size+(h2size / 3)));
 	}
 }
 
@@ -516,7 +540,7 @@ function gamepadLoop() {
 		}
 		if(gp.axes[5] < -0.5) {
 			//console.log("Axis Up");
-			if((centerY + deltaY) > 0) deltaY--;
+			if((centerY + deltaY) > (h2size*2+radius)) deltaY--;
 		}
 		if(gp.axes[1] > 0.5 && gp.axes[2] > 0.5 && gp.axes[3] > 0.5 && gp.axes[4] > 0.5) {
 			//console.log("Axis Right");
@@ -561,12 +585,12 @@ function keysPressed(e) {
 			if((centerX + deltaX) < w) deltaX += 2;
 		}
 	 
-		// down
+		// up
 		if (keys[38]) {
-			if((centerY + deltaY) > 0) deltaY -= 2;
+			if((centerY + deltaY) > (h2size*2+radius)) deltaY -= 2;
 		}
 	 
-		// up
+		// down
 		if (keys[40]) {
 			if((centerY + deltaY) < h) deltaY += 2;
 		}
