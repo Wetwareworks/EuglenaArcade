@@ -36,7 +36,7 @@ var menuID;
 var clickRecs;
 
 // Game
-var radius = h1size/4; // Player radius
+var radius = h1size/3; // Player radius
 var start_time = performance.now();
 var time = 0;
 var hit = 0;
@@ -44,6 +44,8 @@ var life = 5;
 var final_score = 0;
 var high_score = 0;
 var high_score_flag = false;
+var direction = false;
+var step5 = 10;
 
 // Machinery
 var motion = []; // Create an array to store our motion data
@@ -71,7 +73,7 @@ function resize(){
 	height = h = window.innerHeight;
 	h1size = w/25;
 	h2size = w/50;
-	radius = h1size/4;
+	radius = h1size/3;
 	for(var i = 0; i < c.length; i++) {
 		c[i].width = width;
 		c[i].height = height;
@@ -229,13 +231,16 @@ function gameMenu() {
 	
 	// Menu items
 	ctx.textAlign="center"; 
-	ctx.font = h2size+"px 'Permanent Marker'";
-	ctx.fillStyle = "rgba(0, 234, 211, 1)";
-	ctx.fillText('WetWareWorks', (w/2), ((h/2)-h1size));
-	
 	ctx.font = h1size+"px 'Permanent Marker'";
+	ctx.fillStyle = "rgba(0, 234, 211, 1)";
+	ctx.fillText('WetWareWorks', (w/2), ((h/2)-h1size*2));
+	
+	ctx.font = h1size*2+"px 'Permanent Marker'";
 	ctx.fillStyle = "rgba(0, 128, 93, 1)";
 	ctx.fillText('Euglena Biotic Arcade', (w/2), (h/2));
+	ctx.strokeStyle = 'rgb(255,255,255)';
+	ctx.lineWidth = radius/10;
+	ctx.strokeText('Euglena Biotic Arcade', (w/2), (h/2));
 	
 	if(videoReady == false) {
 		ctx.font = h2size+"px 'Work Sans'";
@@ -285,9 +290,9 @@ function gameMenu() {
 		ctx.globalAlpha = 1.0;
 	
 		ctx.fillStyle = "rgba(100,100,100,1)";
-		ctx.fillText(txt1, (w/2),(h/2 + h1size));
-		ctx.fillText(txt2, (w/2),(h/2 + (2*h1size)));
-		ctx.fillText(txt3, (w/2),(h/2 + (3*h1size)));
+		ctx.fillText(txt1, (w/2),(h/2 + h1size)); // Start new game
+		//ctx.fillText(txt2, (w/2),(h/2 + (2*h1size))); // Calibrate
+		//ctx.fillText(txt3, (w/2),(h/2 + (3*h1size))); // Game info
 		
 		// Check Browser Compatibility with Gamepads
 		if(!gamepadSupportAvailable) {
@@ -366,15 +371,34 @@ function gameLoop() {
 		start_time = performance.now();
 		
 		// Reset player on random location
-		centerX = Math.floor((Math.random() * w) + 1);
-		centerY = Math.floor(Math.random() * (h-(h2size*2)) + (h2size*2));
+		centerX = Math.floor((Math.random() * w/2) + 1)+w/4;
+		centerY = Math.floor(Math.random() * (h-(h2size*2))/2 + (h2size*2))+h/4;
 
 		// Reset 
 		enter = false;
 	}
 
+	// Draw top bar
+	ctx.beginPath();
+	ctx.rect(0, 0, w, (h2size*1.7));
+	ctx.ellipse(w/2, h2size/4, h1size, h1size*4, Math.PI / 2, 0, 2 * Math.PI);
+	ctx.fillStyle = "rgba(0,0,0)";
+	ctx.fill();
+	ctx.closePath();
+	
+	// Wetwareworks		
+	ctx.textAlign="center"; 
+	ctx.font = (h2size/2) + "px 'Permanent Marker'";
+	ctx.fillStyle = "rgba(0, 234, 211, 1)";
+	ctx.fillText('WetWareWorks', w/2, (h2size/2));
+	ctx.font = h2size + "px 'Permanent Marker'";
+	//ctx.fillStyle = "rgba(0, 128, 93, 1)";
+	ctx.fillStyle = 'yellow';
+	ctx.fillText('Euglena Biotic Arcade', w/2, (h2size+(h2size / 2)));
+
 	// Player is dead so delete score
 	if(life < 1) {
+	
 		if(final_score == 0) {
 			final_score = Math.round((performance.now() - start_time)/1000);
 		}
@@ -393,47 +417,46 @@ function gameLoop() {
 		}
 		
 		ctx.textAlign="center"; 
-		ctx.font = h1size + "px 'Permanent Marker'";
+		ctx.font = h1size*4 + "px 'Permanent Marker'";
 		ctx.fillStyle = "rgba(0, 234, 211, 1)";
-		ctx.fillText('Game Over', w/2, (h/2-h2size));
+		ctx.fillText('Game Over', w/2, (h/2-h2size*2));
 		ctx.font = h2size + "px 'Work Sans'";
+		ctx.beginPath();
 		ctx.rect((w/2-ctx.measureText(txt9).width/2-10),(h/2-h2size/2),(ctx.measureText(txt9).width+20),(h2size+10));
 		ctx.fillStyle = "rgba(0, 128, 93, 1)";
 		ctx.fill();		
+		ctx.closePath();
 		ctx.fillStyle = "rgba(255,255,255,1)";
 		ctx.fillText(txt9, (w/2), (h/2 + h2size/2));
 	}
 	else {
 		// Player is alive so draw the game 
-		// Draw top bar
-		ctx.rect(0, 0, w, (h2size*2));
-		ctx.fillStyle = "rgba(0,0,0,1)";
-		ctx.fill();
 		
 		// Count down
+		ctx.beginPath();
 		ctx.textAlign="center";
-		ctx.font = h1size + "px 'Permanent Marker'";
+		ctx.font = h1size*10 + "px 'Permanent Marker'";
 		ctx.fillStyle = "rgba(255, 255, 255, 1)";
 		ctx.lineWidth = h1size/10;
 		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
 		if((performance.now() - start_time) < 1000) {
 			ctx.globalAlpha = (performance.now() - start_time)/1000;
-			ctx.fillText('3', w/2, h/2);
+			ctx.fillText('3', w/2, h/2+(h1size*5));
 			console.log("3");
 		}
 		else if((performance.now() - start_time) < 2000) {
 			ctx.globalAlpha = (performance.now() - start_time)/2000;
-			ctx.fillText('2', w/2, h/2);
+			ctx.fillText('2', w/2, h/2+(h1size*5));
 			console.log("2");
 		}
 		else if((performance.now() - start_time) < 3000) {
 			ctx.globalAlpha = (performance.now() - start_time)/3000;
-			ctx.fillText('1', w/2, h/2);
+			ctx.fillText('1', w/2, h/2+(h1size*5));
 			console.log("1");
 		}
 		else if((performance.now() - start_time) < 4000) {
 			ctx.globalAlpha = (performance.now() - start_time)/4000;
-			ctx.fillText('GO!', w/2, h/2);
+			ctx.fillText('GO!', w/2, h/2+(h1size*5));
 			console.log("0");
 		}
 		ctx.lineWidth = 0;
@@ -441,40 +464,64 @@ function gameLoop() {
 	
 		// Draw player	
 		ctx.beginPath();
-		ctx.arc((centerX + deltaX), (centerY + deltaY), radius, 0, Math.PI*2, true); 
+		//ctx.arc((centerX + deltaX), (centerY + deltaY), radius, 0, Math.PI*2, true); // basic circle
+		ctx.fillStyle = 'rgb(255,174,11)';
+		ctx.ellipse((centerX + deltaX), (centerY + deltaY), radius, (radius*0.5), Math.PI, 0, Math.PI);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.fillStyle = 'rgb(255,134,13)';
+		ctx.ellipse((centerX + deltaX), (centerY + deltaY), radius, (radius*0.5), Math.PI, 0, Math.PI,true);
+		ctx.fill();
+		ctx.beginPath();
+		if(direction) ctx.rect((centerX + deltaX-(radius/(8-1))),(centerY + deltaY-(radius)),(radius/4),(radius/2));
+		else ctx.rect((centerX + deltaX-(radius/(8+1))),(centerY + deltaY-(radius)),(radius/4),(radius/2));
+		ctx.fillStyle = 'rgb(122,122,122)';
+		ctx.fill();
+		ctx.beginPath();
+		if(direction) ctx.rect((centerX + deltaX-(radius/(4-1))),(centerY + deltaY-(radius/1.2)),(radius/2),(radius/2));
+		else ctx.rect((centerX + deltaX-(radius/(4+1))),(centerY + deltaY-(radius/1.2)),(radius/2),(radius/2));
+		ctx.fillStyle = 'rgb(255,174,11)';
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc((centerX + deltaX), (centerY + deltaY), radius/6, 0, Math.PI*2, true);
+		ctx.arc((centerX + deltaX-(radius/2)), (centerY + deltaY), radius/6, 0, Math.PI*2, true);
+		ctx.arc((centerX + deltaX+(radius/2)), (centerY + deltaY), radius/6, 0, Math.PI*2, true);
+		ctx.fillStyle = 'rgb(255,255,255)';
+		ctx.fill();
+		ctx.beginPath();
+		
+		step5 = step5 + 1;
+		if(step5==51) step5 = 10;
+		
+		if(direction) ctx.rect((centerX + deltaX-(radius*1.2)),(centerY + deltaY-((radius/Math.floor(step5/5))/2)),(radius*0.2),(radius/Math.floor(step5/5)));
+		else ctx.rect((centerX + deltaX+(radius*1)),(centerY + deltaY-((radius/Math.floor(step5/5))/2)),(radius*0.2),(radius/Math.floor(step5/5)));
+		ctx.fillStyle = 'rgb(50,50,50)';
+		ctx.fill();
+		ctx.closePath();
 		
 		// Spawn with immunity indicator
 		if((performance.now() - start_time) < 4000) {
+			ctx.beginPath();
+			ctx.ellipse((centerX + deltaX), (centerY + deltaY), radius, (radius*0.5), Math.PI, 0, 2* Math.PI);
 			ctx.lineWidth = ((h2size/4) / ((performance.now() - start_time)/1000));
 			ctx.strokeStyle = "rgba(120, 234, 211, 1)";
 			ctx.stroke();
+			ctx.closePath();
 		}
-		
-		ctx.fillStyle = "rgba(54, 202, 232, 1)";
-		ctx.fill();
-		ctx.closePath();		
-
-		// Wetwareworks		
-		ctx.textAlign="center"; 
-		ctx.font = (h2size/2) + "px 'Permanent Marker'";
-		ctx.fillStyle = "rgba(0, 234, 211, 1)";
-		ctx.fillText('WetWareWorks', w/2, (h2size/2));
-		ctx.font = h2size + "px 'Permanent Marker'";
-		ctx.fillStyle = "rgba(0, 128, 93, 1)";
-		ctx.fillText('Euglena Biotic Arcade', w/2, (h2size+(h2size / 2)));
+		ctx.lineWidth = 1;
 		
 		// Display score
 		ctx.textAlign="start"; 
 		score = Math.round((performance.now() - start_time)/1000);
-		ctx.font = h2size + "px 'Work Sans'";
+		ctx.font = h2size + "px 'Permanent Marker'";
 		ctx.fillStyle = "rgba(248, 132, 81, 1)";
 		ctx.fillText('Score: '+ score, h1size, (h2size+(h2size / 3)));
 		
 		// Display score
 		ctx.textAlign="start"; 
 		score = Math.round((performance.now() - start_time)/1000);
-		ctx.font = h2size + "px 'Work Sans'";
-		ctx.fillStyle = "rgba(248, 132, 81, 1)";
+		ctx.font = h2size + "px 'Permanent Marker'";
+		ctx.fillStyle = "rgba(0, 128, 93, 1)";
 		ctx.fillText('High Score: '+ high_score, w/5, (h2size+(h2size / 3)));
 		
 		// Display lives
@@ -596,10 +643,12 @@ function gamepadLoop() {
 		if(gp.axes[1] > 0.5 && gp.axes[2] > 0.5 && gp.axes[3] > 0.5 && gp.axes[4] > 0.5) {
 			//console.log("Axis Right");
 			if((centerX + deltaX) < w) deltaX++;
+			direction = true;
 		}
 		if(gp.axes[1] < -0.5 && gp.axes[2] < -0.5 && gp.axes[3] < -0.5 && gp.axes[4] < -0.5) {
 			//console.log("Axis Left");
 			if((centerX + deltaX) > 0) deltaX--;
+			direction = false;
 		}
 	}
 
@@ -629,11 +678,13 @@ function keysPressed(e) {
 		// left
 		if (keys[37]) {
 			if((centerX + deltaX) > 0) deltaX -= 2;
+			direction = false;
 		}
 	 
 		// right
 		if (keys[39]) {
 			if((centerX + deltaX) < w) deltaX += 2;
+			direction = true;
 		}
 	 
 		// up
